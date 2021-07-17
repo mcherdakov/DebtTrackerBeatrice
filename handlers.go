@@ -7,20 +7,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mcherdakov/telegoat"
 )
-
-func SendMessage(message string, chat_id int) {
-	sendMessageContext := map[string]interface{}{
-		"chat_id": chat_id,
-		"text":    message,
-	}
-
-	postRequest("sendMessage", sendMessageContext)
-}
 
 func checkRecieverIsSet(user UserTable) bool {
 	if !user.default_reciever.Valid {
-		SendMessage(
+		telegramClient.SendMessage(
 			`Please set your reciever using "default" command:
 			/default <username>`,
 			user.chat_id,
@@ -30,7 +23,7 @@ func checkRecieverIsSet(user UserTable) bool {
 	return user.default_reciever.Valid
 }
 
-func HandleUpdate(update Update) {
+func HandleUpdate(update telegoat.Update) {
 	log.Printf("message: %s, username: %s", update.Message.Text, update.Message.From.Username)
 
 	user, created := GetOrCreateUser(update.Message.From)
@@ -42,7 +35,7 @@ func HandleUpdate(update Update) {
 	}
 
 	if created {
-		SendMessage(
+		telegramClient.SendMessage(
 			"Looks like you new here, hello!",
 			user.chat_id,
 		)
@@ -55,14 +48,14 @@ func HandleUpdate(update Update) {
 	amount, err := strconv.ParseFloat(commandArray[0], 64)
 	if err == nil {
 		addTransaction(user, amount, strings.Join(commandArray[1:], " "))
-		SendMessage("Done <3", user.chat_id)
+		telegramClient.SendMessage("Done <3", user.chat_id)
 		return
 	}
 
 	switch commandArray[0] {
 	case "/default":
 		if len(commandArray) < 2 {
-			SendMessage(
+			telegramClient.SendMessage(
 				`Correct way to do it: 
 				/default <username>`,
 				user.chat_id,
@@ -73,7 +66,7 @@ func HandleUpdate(update Update) {
 	case "/d":
 		getDebt(user)
 	default:
-		SendMessage(
+		telegramClient.SendMessage(
 			`Command not found
 			Available commands:
 			/default <username>
@@ -87,7 +80,7 @@ func HandleUpdate(update Update) {
 func setDefaultReciever(user UserTable, recieverUsername string) {
 	reciever, err := GetUserByUsername(recieverUsername)
 	if err == sql.ErrNoRows {
-		SendMessage(
+		telegramClient.SendMessage(
 			"No such user in our database! Feel free to invite",
 			user.chat_id,
 		)
@@ -99,7 +92,7 @@ func setDefaultReciever(user UserTable, recieverUsername string) {
 	user.default_reciever = reciever.id
 	user.Update()
 
-	SendMessage("Done!", user.chat_id)
+	telegramClient.SendMessage("Done!", user.chat_id)
 }
 
 func addTransaction(user UserTable, amount float64, message string) {
@@ -131,7 +124,7 @@ func addTransaction(user UserTable, amount float64, message string) {
 func getDebt(user UserTable) {
 	dt, err := GetDebtByUser(user)
 	if err == sql.ErrNoRows {
-		SendMessage(
+		telegramClient.SendMessage(
 			"No transaction yet",
 			user.chat_id,
 		)
@@ -145,7 +138,7 @@ func getDebt(user UserTable) {
 		log.Fatalln(err)
 	}
 
-	SendMessage(
+	telegramClient.SendMessage(
 		fmt.Sprintf(
 			"Your debt to %s is %f",
 			reciever.username,

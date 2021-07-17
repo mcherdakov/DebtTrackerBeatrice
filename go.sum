@@ -1,2 +1,6 @@
 github.com/lib/pq v1.10.2 h1:AqzbZs4ZoCBp+GtejcpCpcxM3zlSMx29dXbUSeVtJb8=
 github.com/lib/pq v1.10.2/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/mcherdakov/telegoat v0.0.0-20210717192544-5637c4c73d30 h1:IF3cfswAL2/v+Hh1TCbvcubkklIJoXXLDd0N4pCqm0s=
+github.com/mcherdakov/telegoat v0.0.0-20210717192544-5637c4c73d30/go.mod h1:5zGfM3VPrOFEyjg1jhENUZYNUGbwbSpBhr7gzERQ+BU=
+github.com/mcherdakov/telegoat v0.1.0 h1:pM8Y0V0pjuLz9GnqGHtohxhWc/JnS20FKYrH5YD+ycs=
+github.com/mcherdakov/telegoat v0.1.0/go.mod h1:5zGfM3VPrOFEyjg1jhENUZYNUGbwbSpBhr7gzERQ+BU=
