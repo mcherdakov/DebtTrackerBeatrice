@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"log"
+
+	"github.com/mcherdakov/telegoat"
 )
 
 type UserTable struct {
@@ -34,7 +36,7 @@ func (user *UserTable) Update() {
 	}
 }
 
-func GetOrCreateUser(telegramUser TelegramUser) (UserTable, bool) {
+func GetOrCreateUser(telegramUser telegoat.User) (UserTable, bool) {
 	user := UserTable{
 		username: telegramUser.Username,
 		chat_id:  telegramUser.Id,

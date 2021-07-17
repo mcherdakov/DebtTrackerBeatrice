@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/mcherdakov/telegoat"
 )
 
 type DatabaseConfig struct {
@@ -21,13 +23,13 @@ type DatabaseConfig struct {
 }
 
 type Config struct {
-	Telegram_token string
-	Database       DatabaseConfig
+	TelegramToken string `json:"telegram_token"`
+	Database      DatabaseConfig
 }
 
 var config Config
 
-var telegramUrl string
+var telegramClient telegoat.TelegramClient
 
 var DB *sql.DB = nil
 
@@ -42,10 +44,7 @@ func init() {
 		log.Fatalln(err)
 	}
 
-	telegramUrl = fmt.Sprintf(
-		"https://api.telegram.org/bot%s",
-		config.Telegram_token,
-	)
+	telegramClient = telegoat.NewTelegramClient(config.TelegramToken)
 
 	postgresConn := fmt.Sprintf(
 		"host=%s port=%d dbname=%s user=%s password=%s sslmode=%s sslrootcert=%s",
@@ -68,5 +67,5 @@ func init() {
 
 func main() {
 	defer DB.Close()
-	TelegramPoll()
+	telegramClient.Poll(time.Millisecond*100, HandleUpdate)
 }
