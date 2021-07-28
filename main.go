@@ -13,13 +13,13 @@ import (
 )
 
 type DatabaseConfig struct {
-	Host        string
-	Port        int
-	Dbname      string
-	User        string
-	Password    string
-	SSLMode     string
-	SSLRootCert string
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
+	DBName      string `json:"db_name"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	SSLMode     string `json:"ssl_mode"`
+	SSLRootCert string `json:"ssl_root_cert"`
 }
 
 type Config struct {
@@ -50,7 +50,7 @@ func init() {
 		"host=%s port=%d dbname=%s user=%s password=%s sslmode=%s sslrootcert=%s",
 		config.Database.Host,
 		config.Database.Port,
-		config.Database.Dbname,
+		config.Database.DBName,
 		config.Database.User,
 		config.Database.Password,
 		config.Database.SSLMode,
