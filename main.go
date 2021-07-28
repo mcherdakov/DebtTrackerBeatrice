@@ -18,8 +18,8 @@ type DatabaseConfig struct {
 	Dbname      string
 	User        string
 	Password    string
-	Sslmode     string
-	Sslrootcert string
+	SSLMode     string
+	SSLRootCert string
 }
 
 type Config struct {
@@ -53,8 +53,8 @@ func init() {
 		config.Database.Dbname,
 		config.Database.User,
 		config.Database.Password,
-		config.Database.Sslmode,
-		config.Database.Sslrootcert,
+		config.Database.SSLMode,
+		config.Database.SSLRootCert,
 	)
 
 	db, err := sql.Open("postgres", postgresConn)
@@ -65,7 +65,14 @@ func init() {
 	DB = db
 }
 
+func closeDB() {
+	err := DB.Close()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func main() {
-	defer DB.Close()
+	defer closeDB()
 	telegramClient.Poll(time.Millisecond*100, HandleUpdate)
 }

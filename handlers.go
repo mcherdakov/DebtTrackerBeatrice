@@ -11,16 +11,19 @@ import (
 	"github.com/mcherdakov/telegoat"
 )
 
-func checkRecieverIsSet(user UserTable) bool {
-	if !user.default_reciever.Valid {
-		telegramClient.SendMessage(
-			`Please set your reciever using "default" command:
+func checkReceiverIsSet(user UserTable) bool {
+	if !user.defaultReceiver.Valid {
+		err := telegramClient.SendMessage(
+			`Please set your receiver using "default" command:
 			/default <username>`,
-			user.chat_id,
+			user.chatId,
 		)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
-	return user.default_reciever.Valid
+	return user.defaultReceiver.Valid
 }
 
 func HandleUpdate(update telegoat.Update) {
@@ -35,86 +38,104 @@ func HandleUpdate(update telegoat.Update) {
 	}
 
 	if created {
-		telegramClient.SendMessage(
+		err := telegramClient.SendMessage(
 			"Looks like you new here, hello!",
-			user.chat_id,
+			user.chatId,
 		)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
-	if commandArray[0] != "/default" && !checkRecieverIsSet(user) {
+	if commandArray[0] != "/default" && !checkReceiverIsSet(user) {
 		return
 	}
 
 	amount, err := strconv.ParseFloat(commandArray[0], 64)
 	if err == nil {
 		addTransaction(user, amount, strings.Join(commandArray[1:], " "))
-		telegramClient.SendMessage("Done <3", user.chat_id)
+		err := telegramClient.SendMessage("Done <3", user.chatId)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
 	switch commandArray[0] {
 	case "/default":
 		if len(commandArray) < 2 {
-			telegramClient.SendMessage(
+			err := telegramClient.SendMessage(
 				`Correct way to do it: 
 				/default <username>`,
-				user.chat_id,
+				user.chatId,
 			)
+			if err != nil {
+				log.Println(err)
+			}
 			return
 		}
-		setDefaultReciever(user, commandArray[1])
+		setDefaultReceiver(user, commandArray[1])
 	case "/d":
 		getDebt(user)
 	default:
-		telegramClient.SendMessage(
+		err := telegramClient.SendMessage(
 			`Command not found
 			Available commands:
 			/default <username>
 			/d
 			<amount> <message>`,
-			user.chat_id,
+			user.chatId,
 		)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
-func setDefaultReciever(user UserTable, recieverUsername string) {
-	reciever, err := GetUserByUsername(recieverUsername)
+func setDefaultReceiver(user UserTable, receiverUsername string) {
+	receiver, err := GetUserByUsername(receiverUsername)
 	if err == sql.ErrNoRows {
-		telegramClient.SendMessage(
+		err := telegramClient.SendMessage(
 			"No such user in our database! Feel free to invite",
-			user.chat_id,
+			user.chatId,
 		)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	} else if err != nil {
 		log.Fatalln(err)
 	}
 
-	user.default_reciever = reciever.id
+	user.defaultReceiver = receiver.id
 	user.Update()
 
-	telegramClient.SendMessage("Done!", user.chat_id)
+	err = telegramClient.SendMessage("Done!", user.chatId)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func addTransaction(user UserTable, amount float64, message string) {
-	user_from := user.id.Int32
-	user_to := user.default_reciever.Int32
+	userFrom := user.id.Int32
+	userTo := user.defaultReceiver.Int32
 
 	transaction := TransactionTable{
-		amount:                amount,
-		user_from:             user_from,
-		user_to:               user_to,
-		message:               message,
-		transaction_timestamp: time.Now().Unix(),
+		amount:               amount,
+		userFrom:             userFrom,
+		userTo:               userTo,
+		message:              message,
+		transactionTimestamp: time.Now().Unix(),
 	}
 	transaction.Insert()
 
 	dtFrom := DebtTable{
-		user_from: user_from,
-		user_to:   user_to,
+		userFrom: userFrom,
+		userTo:   userTo,
 	}
 	dtTo := DebtTable{
-		user_from: user_to,
-		user_to:   user_from,
+		userFrom: userTo,
+		userTo:   userFrom,
 	}
 
 	dtFrom.UpdateOrCreate(amount)
@@ -124,26 +145,32 @@ func addTransaction(user UserTable, amount float64, message string) {
 func getDebt(user UserTable) {
 	dt, err := GetDebtByUser(user)
 	if err == sql.ErrNoRows {
-		telegramClient.SendMessage(
+		err := telegramClient.SendMessage(
 			"No transaction yet",
-			user.chat_id,
+			user.chatId,
 		)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	} else if err != nil {
 		log.Fatalln(err)
 	}
 
-	reciever, err := GetUserById(user.default_reciever)
+	receiver, err := GetUserById(user.defaultReceiver)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	telegramClient.SendMessage(
+	err = telegramClient.SendMessage(
 		fmt.Sprintf(
 			"Your debt to %s is %f",
-			reciever.username,
+			receiver.username,
 			-dt.amount,
 		),
-		user.chat_id,
+		user.chatId,
 	)
+	if err != nil {
+		log.Println(err)
+	}
 }
